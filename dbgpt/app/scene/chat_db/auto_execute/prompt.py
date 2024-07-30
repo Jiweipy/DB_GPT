@@ -46,6 +46,44 @@ _DEFAULT_TEMPLATE_ZH = """
 表结构定义:
     {table_info}
 
+表信息说明:
+    '''
+CREATE TABLE IF NOT EXISTS table_ICL (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, -- ID primary key
+    ICL_ID TEXT, -- ICL ID
+    ICL_Name TEXT NOT NULL, -- ICL 信息名称
+    Description TEXT, -- 信息描述
+    Category TEXT, -- 信息所属类别
+    Information_Owner TEXT, -- 信息所有者
+    Record_Creator TEXT, -- 信息记录创建者
+    Status TEXT, -- 信息状态，可选值包括Approved和Rejected
+    ICL_Security_Class TEXT, -- ICL 信息分类安全等级，可选值包括Special Protection (SP)和Basic Protection (BP)
+    ICL_Classification_Result_Confidentiality TEXT, -- ICL 分类结果（机密性），可选值包括Strictly Confidential、Confidential、Non Public
+    ICL_Classification_Result_Integrity TEXT, -- ICL 分类结果（完整性），可选值包括High Integrity、Medium Integrity、Low Integrity
+    ICL_Classification_Result_Availability TEXT, -- ICL 分类结果（可用性），可选值包括High Availability、Medium Availability、Low Availability
+    Submit_Date TEXT, -- 提交日期
+    Approval_Date TEXT -- 批准日期
+)
+'''
+
+'''
+CREATE TABLE IF NOT EXISTS table_IOB (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, -- ID primary key
+    IOB_ID TEXT, -- IOB ID
+    IOB_Name TEXT NOT NULL, -- IOB 名称
+    Level_1 TEXT, -- IOB 一级分类
+    Level_2 TEXT, -- IOB 二级分类
+    Level_3 TEXT, -- IOB 三级分类
+    Method_of_Classification TEXT, -- IOB 分类方法，包括General Questionnaire和Personal Information Questionnaire
+    IOB_Security_Class TEXT, -- IOB 分类安全等级，包括Basic Protection (BP)和Special Protection (SP)
+    IOB_Classification_Result_Confidentiality TEXT, -- IOB 分类结果（机密性），可选值包括Strictly Confidential、Confidential、Non Public
+    IOB_Classification_Result_Integrity TEXT, -- IOB 分类结果（完整性），可选值包括High Integrity、Medium Integrity、Low Integrity
+    IOB_Classification_Result_Availability TEXT, -- IOB 分类结果（可用性），可选值包括High Availability、Medium Availability、Low Availability
+    ICL_ID TEXT, -- ICL ID（外键）
+    FOREIGN KEY (ICL_ID) REFERENCES table_ICL(ICL_ID) -- 外键约束，关联 ICL ID
+)
+'''
+
 约束:
     1. 请根据用户问题理解用户意图，使用给出表结构定义创建一个语法正确的 {dialect} sql，如果不需要sql，则直接回答用户问题。
     2. 除非用户在问题中指定了他希望获得的具体数据行数，否则始终将查询限制为最多 {top_k} 个结果。
@@ -81,7 +119,7 @@ PROMPT_NEED_STREAM_OUT = False
 # Temperature is a configuration hyperparameter that controls the randomness of language model output.
 # A high temperature produces more unpredictable and creative results, while a low temperature produces more common and conservative output.
 # For example, if you adjust the temperature to 0.5, the model will usually generate text that is more predictable and less creative than if you set the temperature to 1.0.
-PROMPT_TEMPERATURE = 0.5
+PROMPT_TEMPERATURE = 0.01
 
 prompt = ChatPromptTemplate(
     messages=[
