@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS table_IOB (
     6.请从如下给出的展示方式种选择最优的一种用以进行数据渲染，将类型名称放入返回要求格式的name参数值种，如果找不到最合适的则使用'Table'作为展示方式，可用数据展示方式如下: {display_type}
 用户问题:
     {user_input}
-请一步步思考并按照以下JSON格式回复：
+请一步步思考并按照以下JSON格式回复（严格按照以下格式输出内容）：
       {response}
 确保返回正确的json并且可以被Python json.loads方法解析.
 
@@ -140,6 +140,6 @@ prompt_adapter = AppScenePromptTemplateAdapter(
     stream_out=PROMPT_NEED_STREAM_OUT,
     output_parser=DbChatOutputParser(is_stream_out=PROMPT_NEED_STREAM_OUT),
     temperature=PROMPT_TEMPERATURE,
-    need_historical_messages=False,
+    need_historical_messages=True,
 )
 CFG.prompt_template_registry.register(prompt_adapter, is_default=True)

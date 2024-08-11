@@ -208,6 +208,7 @@ class BaseChat(ABC):
         input_values = await self.generate_input_values()
         # Load history
         self.history_messages = self.current_message.get_history_message()
+        print(f"history_messages: {self.history_messages}")
         self.current_message.start_new_round()
         self.current_message.add_user_message(self.current_user_input)
         self.current_message.start_date = datetime.datetime.now().strftime(
@@ -336,7 +337,7 @@ class BaseChat(ABC):
     )
     async def _no_streaming_call_with_retry(self, payload):
         with root_tracer.start_span("BaseChat.invoke_worker_manager.generate"):
-            model_output = await self.call_llm_operator(payload)
+            model_output = await self.call_llm_operator(payload)  # 终端流式输出结果
 
         ai_response_text = self.prompt_template.output_parser.parse_model_nostream_resp(
             model_output, self.prompt_template.sep
@@ -357,11 +358,12 @@ class BaseChat(ABC):
             )
 
         speak_to_user = self.get_llm_speak(prompt_define_response)
+        print(f"speak_to_user: {speak_to_user}")
 
         view_message = await blocking_func_to_async(
             self._executor,
-            self.prompt_template.output_parser.parse_view_response,
-            speak_to_user,
+            self.prompt_template.output_parser.parse_view_response,  # 执行sql语句获取数据
+            speak_to_user,  # 文字回复内容
             result,
             prompt_define_response,
         )

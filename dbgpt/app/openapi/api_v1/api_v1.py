@@ -44,6 +44,16 @@ from dbgpt.util.executor_utils import (
 )
 from dbgpt.util.tracer import SpanType, root_tracer
 
+import re
+import json
+from dbgpt.app.scene.chat_db.auto_execute.critic_prompt import _DEFAULT_TEMPLATE_FOR_CRITIC_ZH, API_KEY_ZHIPU
+from openai import OpenAI 
+client = OpenAI(
+    api_key=API_KEY_ZHIPU,
+    base_url="https://open.bigmodel.cn/api/paas/v4/"
+) 
+
+
 router = APIRouter()
 CFG = Config()
 CHAT_FACTORY = ChatFactory()
@@ -441,12 +451,71 @@ async def model_supports(worker_manager: WorkerManager = Depends(get_worker_mana
         return Result.succ(FlatSupportedModel.from_supports(models))
     except Exception as e:
         return Result.failed(code="E000X", msg=f"Fetch supportd models error {e}")
+    
+
+
+def get_openai_client(model_input, role_system):
+    # QA
+    completion = client.chat.completions.create(
+        model="glm-4",  
+        messages=[    
+            {"role": "system", "content": role_system},    
+            {"role": "user", "content": model_input} 
+        ],
+        top_p=0.7,
+        temperature=0.9
+    ) 
+    return completion.choices[0].message.content
+
+def parse_data_model_msg(data_model_msg):
+    """
+    解析数据模型的回复, 提取thoughts, sql, data, type
+    """
+    # 提取thoughts
+    thoughts_content = data_model_msg.split("\n")[0]
+
+    # 提取 sql
+    sql_match = re.search(r'&quot;sql&quot;: &quot;(.*?)&quot;', data_model_msg)
+    sql_data = sql_match.group(1) if sql_match else None
+
+    # 提取 data
+    data_match = re.search(r'&quot;data&quot;: (\[.*?\])', data_model_msg)
+    data_data = data_match.group(1) if data_match else None
+
+    # 提取 type
+    type_match = re.search(r'&quot;type&quot;: &quot;(.*?)&quot;', data_model_msg)
+    type_data = type_match.group(1) if type_match else None
+
+    # 存储到字典中
+    parse_datas = {
+        "thoughts": thoughts_content,
+        "sql": sql_data,
+        "db_data": data_data,
+        "display_type": type_data
+    }
+    return parse_datas
 
 
 async def no_stream_generator(chat):
     with root_tracer.start_span("no_stream_generator"):
-        msg = await chat.nostream_call()
-        yield f"data: {msg}\n\n"
+        data_model_msg = await chat.nostream_call()
+        print(f"data_model_msg:{data_model_msg}")
+        model_out_content = parse_data_model_msg(data_model_msg)
+        current_user_input = chat.current_user_input
+        db_name = chat.db_name
+        table_info = chat.database.table_info
+        # 使用评判家模型，给出用户建议
+        critic_model_input = _DEFAULT_TEMPLATE_FOR_CRITIC_ZH.replace("{db_name}", db_name).replace("{table_info}", table_info).replace("{user_input}", current_user_input).replace("{model_output}", str(model_out_content))
+        role_system = "你是一个数据模型输出内容的评审员"
+        print(f"输出结果评判中....")
+        critic_model_output = get_openai_client(critic_model_input, role_system)
+        print(f"critic_model_output:{critic_model_output}")
+        critic_model_output_json = json.loads(critic_model_output)
+        user_sug = critic_model_output_json["thoughts_of_query"] + critic_model_output_json["suggestions_of_query"]
+        print(f"user_sug:{user_sug}")
+        # user_sug = "该结果可能不满足您的需求，您可以尝试调整您的输入或者联系管理员！"
+
+        yield f"data: {data_model_msg}{user_sug}\n\n"
 
 
 async def stream_generator(chat, incremental: bool, model_name: str):

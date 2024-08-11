@@ -12,6 +12,9 @@ CFG = Config()
 class ChatWithDbAutoExecute(BaseChat):
     chat_scene: str = ChatScene.ChatWithDbExecute.value()
 
+    keep_start_rounds = 0  # 从对话开始到keep_start_rounds轮对话保留
+    keep_end_rounds = 1  # 最近的keep_end_rounds轮对话保留
+
     """Number of results to return from the query"""
 
     def __init__(self, chat_param: Dict):
