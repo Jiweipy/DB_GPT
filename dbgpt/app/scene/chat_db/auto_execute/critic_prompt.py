@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS table_IOB (
 {
     "thoughts_of_query": "根据给出的信息对用户的问题进行评判",
     "thoughts_of_sql": "根据给出的信息对模型输出的sql进行评判",
-    "suggestions_of_query": "根据thoughts_of_query给出针对query的修改建议",
+    "suggestions_of_query": "根据thoughts_of_query给出针对query的修改建议（使用第二人称）",
     "suggestions_of_sql": "根据thoughts_of_sql给出针对sql的修改建议",
 }
 确保返回正确的json并且可以被Python json.loads方法解析.

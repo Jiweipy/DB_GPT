@@ -47,6 +47,7 @@ from dbgpt.util.tracer import SpanType, root_tracer
 import re
 import json
 from dbgpt.app.scene.chat_db.auto_execute.critic_prompt import _DEFAULT_TEMPLATE_FOR_CRITIC_ZH, API_KEY_ZHIPU
+# from dbgpt.app.scene.chat_db.auto_execute.critic_prompt_v2 import _DEFAULT_TEMPLATE_FOR_CRITIC_ZH, API_KEY_ZHIPU
 from openai import OpenAI 
 client = OpenAI(
     api_key=API_KEY_ZHIPU,
@@ -510,8 +511,11 @@ async def no_stream_generator(chat):
         print(f"输出结果评判中....")
         critic_model_output = get_openai_client(critic_model_input, role_system)
         print(f"critic_model_output:{critic_model_output}")
-        critic_model_output_json = json.loads(critic_model_output)
-        user_sug = critic_model_output_json["thoughts_of_query"] + critic_model_output_json["suggestions_of_query"]
+        try:
+            critic_model_output_json = json.loads(critic_model_output)
+            user_sug = critic_model_output_json["thoughts_of_query"] + critic_model_output_json["suggestions_of_query"]
+        except:
+            user_sug = critic_model_output
         print(f"user_sug:{user_sug}")
         # user_sug = "该结果可能不满足您的需求，您可以尝试调整您的输入或者联系管理员！"
 
