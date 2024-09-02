@@ -299,6 +299,8 @@ class DeepseekProxyLLMModelAdapter(ProxyLLMModelAdapter):
 
     See Also: `Deepseek Documentation <https://platform.deepseek.com/api-docs/>`_
     """
+    # use for exec convert_to_no_system_message(messages, model_metadata) method.
+    support_system_message = False
 
     def support_async(self) -> bool:
         return True
