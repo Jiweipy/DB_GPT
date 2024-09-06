@@ -452,36 +452,12 @@ async def model_supports(worker_manager: WorkerManager = Depends(get_worker_mana
 
 
 async def no_stream_generator(chat):
+    #TODO: for循环两次接收nostream_call的两阶段yield值
     with root_tracer.start_span("no_stream_generator"):
         data_model_msg = await chat.nostream_call()
         print(f"data_model_msg:{data_model_msg}")
-        # model_out_content = parse_data_model_msg(data_model_msg)
-        # current_user_input = chat.current_user_input
-        # db_name = chat.db_name
-        # table_info = chat.database.table_info
-        # # 使用评判家模型，给出用户建议
-        # critic_model_input = _DEFAULT_TEMPLATE_FOR_CRITIC_ZH.replace("{db_name}", db_name).replace("{table_info}", table_info).replace("{user_input}", current_user_input).replace("{model_output}", str(model_out_content))
-        # role_system = "你是一个数据模型输出内容的评审员"
-        # print(f"输出结果评判中....")
-        # critic_model_output = get_openai_client(critic_model_input, role_system)
-        # print(f"critic_model_output:{critic_model_output}")
-        # try:
-        #     critic_model_output_json = json.loads(critic_model_output)
-        #     user_sug = critic_model_output_json["thoughts_of_query"] + critic_model_output_json["suggestions_of_query"]
-        # except:
-        #     user_sug = critic_model_output
-        # print(f"user_sug:{user_sug}")
-        # user_sug = "该结果可能不满足您的需求，您可以尝试调整您的输入或者联系管理员！"
-
-        # yield f"data: {data_model_msg}{user_sug}\n\n"
         yield f"data: {data_model_msg}\n\n"
-        time.sleep(5)
-
-
-        # await asyncio.sleep(0.2)
-
         user_sug = "该结果可能不满足您的需求，您可以尝试调整您的输入或者联系管理员！"
-
         yield f"data: {data_model_msg}{user_sug}\n\n"
 
 

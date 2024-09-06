@@ -4,12 +4,19 @@
 
 - **Chat Data**
 
+   - 基于Chroma向量库执行相关表信息的召回（top5）；
+   - 融合历史对话信息（latest 5）；
+   - 基于deepseek-chat生成sql；
+   - 基于GLM-4-0520生成query suggestion；
+   
+
 ## Features
 
-在原有DB-GPT功能上新增：
+针对Chat Data，在原有DB-GPT功能上新增：
 
 - **评判模型回复**：在获取到数据模型的输出后，使用评判模型生成query的修改建议。
 - **图文流式输出**：实时流式输出数据模型的文字和图表，以及评判模型的文字回复。
+
 
 ## Models
 
@@ -32,8 +39,10 @@
 
 ## TODO
 
-- [ ] Schema Mapper
-- [ ] 多表召回
+- [ ] SchemaLinking
+   - [x] 表信息召回
+   - [ ] 标签、指标召回
+- [ ] LableLinking
 
 
 
@@ -89,8 +98,6 @@
 
 7. web端打开页面：[127.0.0.1:5670](127.0.0.1:5670)
 
-
-test
 
 
 

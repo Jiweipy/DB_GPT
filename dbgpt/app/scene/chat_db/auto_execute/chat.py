@@ -197,11 +197,10 @@ class ChatWithDbAutoExecute(BaseChat):
             except:
                 pass
 
-
-    async def _no_streaming_sql_chart(self, payload, model_output):
-        # with root_tracer.start_span("BaseChat.invoke_worker_manager.generate"):
-        #     model_output = await self.call_llm_operator(payload)  # 终端流式输出结果
-
+    async def _no_streaming_sql_chart(self, model_output):
+        """
+        将模型输出的结果解析为view_message，包括
+        """
         ai_response_text = self.prompt_template.output_parser.parse_model_nostream_resp(
             model_output, self.prompt_template.sep
         )
@@ -300,6 +299,7 @@ class ChatWithDbAutoExecute(BaseChat):
                 )
                 """
                 非流式输出数据模型的["thoughts"]
+                TODO： 该部分代码应放在nostream_call方法中
                 """
                 # msg = self.get_data_by_re(db_model_output)
                 # if msg["thoughts"] != "no thoughts" and flag_thoughts == 0:
@@ -309,6 +309,7 @@ class ChatWithDbAutoExecute(BaseChat):
                 # view_message = view_message.replace("\n", "\\n")
                 """
                 流式输出数据模型的["thoughts"]
+                以"\n"数量作为suggestions_of_query的开始输出和结束输出的标志
                 """
                 key = '"thoughts": "'
                 key_index = 1
@@ -316,11 +317,10 @@ class ChatWithDbAutoExecute(BaseChat):
                 flag_key = 1  # 标记是key对应的值是否已经完全提取到
                 if key in current_chunks and flag_key:
                     if current_chunks.count("\n") == key_index:
-                        # 输出suggestions_of_query之后的字符
-                        # print(current_chunks[current_chunks.find(key) + len(key):])
+                        # 开始：输出suggestions_of_query之后的字符
                         user_sug = current_chunks[current_chunks.find(key) + len(key) :]
                     elif current_chunks.count("\n") == key_index + 1:
-                        # print(current_chunks[current_chunks.find(key) + len(key):current_chunks.find("\",", current_chunks.find(key) + len(key))])
+                        # 结束：输出suggestions_of_query之前的字符
                         user_sug = current_chunks[
                             current_chunks.find(key)
                             + len(key) : current_chunks.find(
@@ -332,14 +332,11 @@ class ChatWithDbAutoExecute(BaseChat):
                         continue
                 else:
                     continue
-
+                # 返回当前的模型输出内容
                 view_msg_current = user_sug
                 yield f"{view_msg_current}\n\n"
             # 模型完全输出之后，统一处理输出的所有内容
-            # view_message = self.stream_plugin_call(output)
-            ai_response_text, view_message = await self._no_streaming_sql_chart(
-                    payload, output
-                )
+            ai_response_text, view_message = await self._no_streaming_sql_chart(output)
             yield f"{view_message}\n\n"
             span.end()
         except Exception as e:
