@@ -19,6 +19,7 @@ from dbgpt._private.pydantic import BaseModel, Field
 from dbgpt.core import ModelMessage, ModelRequest
 from dbgpt.core.awel import DAG, HttpTrigger, MapOperator
 from dbgpt.model.operators import LLMOperator
+import os
 
 
 class TriggerReqBody(BaseModel):
@@ -41,8 +42,27 @@ with DAG("dbgpt_awel_simple_dag_example", tags={"label": "example"}) as dag:
     trigger = HttpTrigger(
         "/examples/simple_chat", methods="POST", request_body=TriggerReqBody
     )
+
+    from dbgpt.model.proxy import ZhipuLLMClient
+    llm_client = ZhipuLLMClient(
+        model_alias="GLM-4-Plus",
+        api_base=os.getenv("OPENAI_API_BASE", "https://open.bigmodel.cn/api/paas/v4/"),
+        api_key=os.getenv("OPENAI_API_KEY", "f90aefe316464dee080c545e6cca1c79.Vgr7uQds7Qobna0e"),
+    )
+
+    # from dbgpt.model.proxy import DeepseekLLMClient
+    # model_name = "deepseek-chat"
+    # llm_client = DeepseekLLMClient(
+    #     model_alias=model_name,
+    #     api_base=os.getenv("OPENAI_API_BASE", "https://api.deepseek.com"),
+    #     api_key=os.getenv("OPENAI_API_KEY", "sk-453833a108dd4572b7efb8a120f09e7d"),
+    # )
+
+
+
     request_handle_task = RequestHandleOperator()
-    llm_task = LLMOperator(task_name="llm_task")
+    llm_task = LLMOperator(task_name="llm_task", llm_client=llm_client)
+    # llm_task = LLMOperator(task_name="llm_task")
     model_parse_task = MapOperator(lambda out: out.to_dict())
     trigger >> request_handle_task >> llm_task >> model_parse_task
 

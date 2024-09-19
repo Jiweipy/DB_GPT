@@ -1,7 +1,9 @@
 import os
+import re
 from typing import Any, Dict, Optional
 
 from pandas import DataFrame
+import sqlparse
 
 from dbgpt._private.pydantic import BaseModel, Field
 from dbgpt.configs.model_config import MODEL_PATH, PILOT_PATH
@@ -38,7 +40,7 @@ from dbgpt.util.chat_util import run_async_tasks
         ..code-block:: shell
         curl --location 'http://127.0.0.1:5555/api/v1/awel/trigger/examples/rag/schema_linking' \
 --header 'Content-Type: application/json' \
---data '{"query": "Statistics of user age in the user table are based on three categories: age is less than 10, age is greater than or equal to 10 and less than or equal to 20, and age is greater than 20. The first column of the statistical results is different ages, and the second column is count."}' 
+--data '{"query": "How old is the user Tom and what does he name?"}'
 """
 
 INSTRUCTION = (
@@ -194,9 +196,31 @@ class SqlExecOperator(MapOperator[Any, Any]):
         Return:
             str: sql execution
         """
-        dataframe = self._connector.run_to_df(command=sql, fetch="all")
+        parsed_sql = self.sql_extract(sql)
+        dataframe = self._connector.run_to_df(command=parsed_sql, fetch="all")
         print(f"sql data is \n{dataframe}")
         return dataframe
+    
+    def sql_extract(self, llm_sql: str) -> str:
+        """Extract SQL from content.
+        Args:
+            content (str): content.
+        Return:
+            str: sql
+        """
+        pattern = re.compile(
+            r"```\s*?(sql)?\n?SELECT([\s\S]*?)```", re.RegexFlag.IGNORECASE
+        )
+        result = re.search(pattern, llm_sql)
+        sql = result.group(0) if result else llm_sql
+        sql = sql.strip("```").strip().strip("sql").strip("\n").strip().strip(";")
+        try:
+            sql = sqlparse.format(sql, reindent=True, keyname_case="upper")
+            print(f"sql: {sql}")
+        except Exception as e:
+            print(f"Failed to format sql: {e}")
+        return sql
+
 
 
 class ChartDrawOperator(MapOperator[Any, Any]):
@@ -224,6 +248,25 @@ class ChartDrawOperator(MapOperator[Any, Any]):
         plt.ylabel(count_column)
         plt.show()
         return str(df)
+    
+
+class PrintResultOperator(MapOperator[Any, Any]):
+    """The Print Result Operator."""
+
+    def __init__(self, **kwargs):
+        """
+        Args:
+        connection (RDBMSConnector): The connection.
+        """
+        super().__init__(**kwargs)
+
+    def map(self, df: DataFrame) -> str:
+        """get sql result in db and draw.
+        Args:
+            sql (str): str.
+        """
+        print(df)
+        return str(df)
 
 
 with DAG("simple_nl_schema_sql_chart_example") as dag:
@@ -232,15 +275,36 @@ with DAG("simple_nl_schema_sql_chart_example") as dag:
     )
     request_handle_task = RequestHandleOperator()
     query_operator = MapOperator(lambda request: request["query"])
-    llm = OpenAILLMClient()
-    model_name = "gpt-3.5-turbo"
+
+    # llm = OpenAILLMClient()
+    # model_name = "gpt-3.5-turbo"
+
+    # TODO:debug ValueError: Current model not support system role
+    # from dbgpt.model.proxy import ZhipuLLMClient
+    # model_name = "GLM-4-Plus"
+    # llm = ZhipuLLMClient(
+    #     model_alias="GLM-4-Plus",
+    #     api_base=os.getenv("OPENAI_API_BASE", "https://open.bigmodel.cn/api/paas/v4/"),
+    #     api_key=os.getenv("OPENAI_API_KEY", "f90aefe316464dee080c545e6cca1c79.Vgr7uQds7Qobna0e"),
+    # )
+
+    from dbgpt.model.proxy import DeepseekLLMClient
+    model_name = "deepseek-chat"
+    llm = DeepseekLLMClient(
+        model_alias=model_name,
+        api_base=os.getenv("OPENAI_API_BASE", "https://api.deepseek.com"),
+        api_key=os.getenv("OPENAI_API_KEY", "sk-453833a108dd4572b7efb8a120f09e7d"),
+    )
+
     retriever_task = SchemaLinkingOperator(
         connector=_create_temporary_connection(), llm=llm, model_name=model_name
     )
     prompt_join_operator = JoinOperator(combine_function=_prompt_join_fn)
     sql_gen_operator = SqlGenOperator(llm=llm, model_name=model_name)
     sql_exec_operator = SqlExecOperator(connector=_create_temporary_connection())
-    draw_chart_operator = ChartDrawOperator(connector=_create_temporary_connection())
+    # draw_chart_operator = ChartDrawOperator(connector=_create_temporary_connection())
+    print_result_operator = PrintResultOperator()
+
     trigger >> request_handle_task >> query_operator >> prompt_join_operator
     (
         trigger
@@ -249,7 +313,8 @@ with DAG("simple_nl_schema_sql_chart_example") as dag:
         >> retriever_task
         >> prompt_join_operator
     )
-    prompt_join_operator >> sql_gen_operator >> sql_exec_operator >> draw_chart_operator
+    prompt_join_operator >> sql_gen_operator >> sql_exec_operator >> print_result_operator
+    # prompt_join_operator >> sql_gen_operator >> sql_exec_operator >> draw_chart_operator
 
 if __name__ == "__main__":
     if dag.leaf_nodes[0].dev_mode:
