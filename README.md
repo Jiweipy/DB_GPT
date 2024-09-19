@@ -97,11 +97,3 @@
    ```
 
 7. web端打开页面：[127.0.0.1:5670](127.0.0.1:5670)
-
-
-
-export OPENAI_API_BASE="https://open.bigmodel.cn/api/paas/v4/"
-export OPENAI_API_KEY="f90aefe316464dee080c545e6cca1c79.Vgr7uQds7Qobna0e"
-
-export OPENAI_API_BASE="https://aus-gpt-access.openai.azure.com/"
-export OPENAI_API_KEY="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"
