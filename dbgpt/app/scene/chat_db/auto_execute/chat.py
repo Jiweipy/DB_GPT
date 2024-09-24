@@ -158,7 +158,7 @@ class ChatWithDbAutoExecute(BaseChat):
     def get_openai_client(self, model_input, role_system):
         # QA
         completion = client.chat.completions.create(
-            model="glm-4",
+            model="GLM-4-Flash",
             messages=[
                 {"role": "system", "content": role_system},
                 {"role": "user", "content": model_input},
@@ -170,7 +170,7 @@ class ChatWithDbAutoExecute(BaseChat):
 
     async def aget_openai_client(self, model_input, role_system):
         completion = client.chat.completions.create(
-            model="glm-4",
+            model="GLM-4-Flash",
             messages=[
                 {"role": "system", "content": role_system},
                 {"role": "user", "content": model_input},
@@ -182,7 +182,7 @@ class ChatWithDbAutoExecute(BaseChat):
 
     async def aget_openai_client_stream(self, model_input, role_system):
         completion = client.chat.completions.create(
-            model="glm-4",
+            model="GLM-4-Flash",
             messages=[
                 {"role": "system", "content": role_system},
                 {"role": "user", "content": model_input},

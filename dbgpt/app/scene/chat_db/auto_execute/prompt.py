@@ -48,40 +48,105 @@ _DEFAULT_TEMPLATE_ZH = """
 
 表信息说明:
     '''
-CREATE TABLE IF NOT EXISTS table_ICL (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, -- ID primary key
-    ICL_ID TEXT, -- ICL ID
-    ICL_Name TEXT NOT NULL, -- ICL 信息名称
-    Description TEXT, -- 信息描述
-    Category TEXT, -- 信息所属类别
-    Information_Owner TEXT, -- 信息所有者
-    Record_Creator TEXT, -- 信息记录创建者
-    Status TEXT, -- 信息状态，可选值包括Approved和Rejected
-    ICL_Security_Class TEXT, -- ICL 信息分类安全等级，可选值包括Special Protection (SP)和Basic Protection (BP)
-    ICL_Classification_Result_Confidentiality TEXT, -- ICL 分类结果（机密性），可选值包括Strictly Confidential、Confidential、Non Public
-    ICL_Classification_Result_Integrity TEXT, -- ICL 分类结果（完整性），可选值包括High Integrity、Medium Integrity、Low Integrity
-    ICL_Classification_Result_Availability TEXT, -- ICL 分类结果（可用性），可选值包括High Availability、Medium Availability、Low Availability
-    Submit_Date TEXT, -- 提交日期
-    Approval_Date TEXT -- 批准日期
-)
-'''
+CREATE TABLE IF NOT EXISTS Basic_Information (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    supplier_editor TEXT,       -- 供应商编辑人
+    email TEXT,                 -- 电子邮件
+    telephone TEXT,             -- 电话号码
+    quotation_date DATE,        -- 报价日期
+    vendor_supplier TEXT,       -- BMW供应商名称
+    bmw_supplier_number TEXT,   -- BMW供应商编号
+    bmw_project TEXT,           -- BMW项目
+    bmw_part_number TEXT,       -- BMW零件编号
+    parts_designation TEXT,     -- 零件名称或零件的详细说明
+    change_index_ai TEXT,       -- 变更索引，零件设计或规格的变更信息
+    request_number_version TEXT,-- 请求编号版本
+    variant TEXT                -- 变体，所报价零件的具体版本或型号
+);
 
-'''
-CREATE TABLE IF NOT EXISTS table_IOB (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, -- ID primary key
-    IOB_ID TEXT, -- IOB ID
-    IOB_Name TEXT NOT NULL, -- IOB 名称
-    Level_1 TEXT, -- IOB 一级分类
-    Level_2 TEXT, -- IOB 二级分类
-    Level_3 TEXT, -- IOB 三级分类
-    Method_of_Classification TEXT, -- IOB 分类方法，包括General Questionnaire和Personal Information Questionnaire
-    IOB_Security_Class TEXT, -- IOB 分类安全等级，包括Basic Protection (BP)和Special Protection (SP)
-    IOB_Classification_Result_Confidentiality TEXT, -- IOB 分类结果（机密性），可选值包括Strictly Confidential、Confidential、Non Public
-    IOB_Classification_Result_Integrity TEXT, -- IOB 分类结果（完整性），可选值包括High Integrity、Medium Integrity、Low Integrity
-    IOB_Classification_Result_Availability TEXT, -- IOB 分类结果（可用性），可选值包括High Availability、Medium Availability、Low Availability
-    ICL_ID TEXT, -- ICL ID（外键）
-    FOREIGN KEY (ICL_ID) REFERENCES table_ICL(ICL_ID) -- 外键约束，关联 ICL ID
-)
+CREATE TABLE IF NOT EXISTS Cost_Analysis (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bmw_part_number TEXT,                             -- BMW零件编号
+    quotation_date DATE,                              -- 报价日期
+    material_costs DECIMAL(10, 2),                    -- 材料成本
+    manufacturing_costs DECIMAL(10, 2),               -- 制造成本
+    total_production_costs DECIMAL(10, 2),            -- 总生产成本
+    included_packaging_transportation BOOLEAN,        -- 包含包装运输
+    included_duties BOOLEAN,                          -- 包含关税
+    devices_and_subsequent_dies DECIMAL(10, 2),       -- 设备和后续模具
+    scrap_costs DECIMAL(10, 2),                       -- 废料成本
+    total_costs_9_0_X DECIMAL(10, 2),                 -- 总成本9.0.X
+    other_surcharges DECIMAL(10, 2),                  -- 其他附加费（管理费等）
+    scrap_costs_material DECIMAL(10, 2),              -- 材料废料成本
+    scrap_costs_manufacturing DECIMAL(10, 2),         -- 制造废料成本
+    quotation_basis_price_2 DECIMAL(10, 2),           -- 报价基础价格2
+    raw_material_cost_adjustment_clause_material DECIMAL(10, 2),  -- 原材料成本调整条款（材料）
+    raw_material_cost_adjustment_clause_energie DECIMAL(10, 2),   -- 原材料成本调整条款（能源）
+    duties_supplier_bmw DECIMAL(10, 2),               -- 供应商-BMW关税
+    transport_costs_supplier_bmw DECIMAL(10, 2),      -- 供应商-BMW运输成本
+    quotation_price_2 DECIMAL(10, 2),                 -- 报价价格2
+    one_time_payments DECIMAL(10, 2),                 -- 一次性付款
+    development_costs_one_time DECIMAL(10, 2),        -- 一次性开发成本
+    special_tools DECIMAL(10, 2),                     -- 特殊工具
+    total_one_time_payments DECIMAL(10, 2),           -- 总一次性付款
+    application_costs_per_part DECIMAL(10, 2),        -- 每个零件的应用成本
+    distribution_administrative_overhead_costs DECIMAL(10, 2),  -- 分销管理间接成本
+    imported_material_costs DECIMAL(10, 2),           -- 进口材料成本
+    local_material_costs DECIMAL(10, 2),              -- 本地材料成本
+    one_time_and_instalment_payments DECIMAL(10, 2),  -- 一次性和分期付款
+    other_costs DECIMAL(10, 2),                       -- 其他成本
+    other_process_costs DECIMAL(10, 2),               -- 其他工艺成本
+    price_indication_order_currency_aw1 DECIMAL(10, 2),  -- 订单货币价格指示 (AW1)
+    profit DECIMAL(10, 2),                            -- 利润
+    raw_material_imported_and_local DECIMAL(10, 2),   -- 原材料（进口和本地）
+    special_direct_costs_other_manufacturing_sekof_and_subsequent_dies DECIMAL(10, 2),  -- 其他制造特殊直接成本（SEKOF和后续模具）
+    special_direct_costs_substantial_process_manufacturing_sekof_and_subsequent_dies DECIMAL(10, 2),  -- 实质性工艺制造特殊直接成本（SEKOF和后续模具）
+    special_tools_other_process_manufacturing DECIMAL(10, 2),  -- 其他工艺制造特殊工具
+    special_tools_substantial_process_manufacturing DECIMAL(10, 2),  -- 实质性工艺制造特殊工具
+    substantial_process_costs DECIMAL(10, 2),         -- 实质性工艺成本
+    total_import_value_cif DECIMAL(10, 2),            -- 总进口价值（CIF）
+    total_lc_manufacturing_costs DECIMAL(10, 2),      -- 总本地制造成本
+    lc_rate_calculation DECIMAL(10, 2),               -- 本地成本率计算
+    lc_rate_percentage DECIMAL(5, 2),                 -- 本地成本率百分比
+    development_costs DECIMAL(10, 2)                  -- 开发成本
+);
+
+CREATE TABLE IF NOT EXISTS Part_Assumption (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bmw_part_number TEXT,                             -- BMW零件编号
+    production_run_time_years DECIMAL(5, 2),          -- 生产运行时间（年）
+    total_volume_inquiry_parts INTEGER,               -- 零件总询价量
+    peak_volume_year_parts_per_year INTEGER,          -- 每年峰值产量（件/年）
+    plan_capacity_parts_per_year INTEGER,             -- 计划产能（件/年）
+    manufacturing_lot_size_parts INTEGER,             -- 生产批量大小（件）
+    production_start_sop_mm_yyyy DATE,                -- 生产开始日期（月/年）
+    drawing_index_z1 TEXT                             -- 图纸索引Z1
+);
+
+CREATE TABLE IF NOT EXISTS Supplier_Assumption (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bmw_supplier_number TEXT,                         -- BMW供应商编号
+    manufacturing_site_country_location TEXT,         -- 生产地点所在国家
+    country_of_distribution_location TEXT,            -- 分销国家/位置
+    hours_worked_per_year_h DECIMAL(7, 2),            -- 每年工作小时数
+    shifts_per_week INTEGER,                          -- 每周轮班次数
+    order_currency_1_aw1 TEXT,                        -- 订单货币1 (AW1)
+    quotation_currency_2_aw2_opt TEXT,                -- 报价货币2 (AW2，可选)
+    quotation_currency_3_aw3_opt TEXT,                -- 报价货币3 (AW3，可选)
+    lta_long_term_agreement TEXT                      -- 长期协议 (LTA)
+);
+
+CREATE TABLE IF NOT EXISTS Other_Data (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bmw_part_number TEXT,                             -- BMW零件编号
+    hts_code_component TEXT,                          -- HTS编码组件
+    part_dimensions_l_w_h_mm TEXT,                    -- 零件尺寸（长x宽x高，毫米）
+    unpacked_parts_weight_kg DECIMAL(10, 3),          -- 未包装零件重量（千克）
+    total_weight_kg DECIMAL(10, 3),                   -- 总重量（千克）
+    terms_of_delivery TEXT,                           -- 交付条款
+    supply_type_kovp_call_up_status TEXT              -- 供应类型KOVP调用状态
+);
+
 '''
 
 约束:
