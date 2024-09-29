@@ -188,3 +188,5 @@ thirdparty
 
 # Ingore datas
 /datas
+
+/test.ipynb
