@@ -527,6 +527,9 @@ class BaseChat(ABC):
             {
                 "response_heatmap": "Suitable for visual analysis of time series data, large-scale data sets, distribution of classified data, etc."
             },
+            {
+                "response_bar_chart": "Suitable for comparison of data between different categories, ranking of data, etc."
+            }
         ]
 
         return "\n".join(
